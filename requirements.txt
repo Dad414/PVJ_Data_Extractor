@@ -6,3 +6,4 @@ pytesseract
 Pillow
 streamlit
 watchdog
+plotly
