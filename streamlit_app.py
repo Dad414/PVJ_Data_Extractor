@@ -162,34 +162,40 @@ elif selected_page == "Extractor":
                         "summaries": summaries,
                         "processed": True
                     }
+                    
+                    # Save individual file to server if output_dir is set
+                    out_dir = defaults.get("output_dir", "")
+                    if out_dir and not df.empty:
+                        try:
+                            os.makedirs(out_dir, exist_ok=True)
+                            base_name = os.path.splitext(up_file.name)[0]
+                            save_name = f"{base_name}.xlsx"
+                            saved_path = os.path.join(out_dir, save_name)
+                            df.to_excel(saved_path, index=False)
+                            st.toast(f"Saved {save_name} to server", icon="✅")
+                        except Exception as e:
+                            st.error(f"Failed to save {up_file.name} to server: {e}")
             # Combine results
             final_df = get_combined_dataframe()
             
             if not final_df.empty:
-                # 1. Save to Server Output Directory
-                out_dir = defaults.get("output_dir", "")
-                
-                if out_dir:
-                    try:
-                        os.makedirs(out_dir, exist_ok=True)
-                        timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
-                        save_name = f"PVJ_Extracted_{timestamp}.xlsx"
-                        saved_path = os.path.join(out_dir, save_name)
-                        
-                        final_df.to_excel(saved_path, index=False)
-                        st.success(f"✅ Saved results to server: `{saved_path}`")
-                    except Exception as e:
-                        st.error(f"Could not save to server directory: {e}")
+                # Determine download filename
+                if len(uploaded_files) == 1:
+                    base_name = os.path.splitext(uploaded_files[0].name)[0]
+                    download_name = f"{base_name}.xlsx"
+                else:
+                    timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
+                    download_name = f"PVJ_Combined_{timestamp}.xlsx"
 
-                # 2. Provide Download Button
+                # Provide Download Button
                 with io.BytesIO() as buffer:
                     with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                         final_df.to_excel(writer, index=False, sheet_name='Extracted Data')
                     
                     st.download_button(
-                        label="⬇️ Download All Results (Excel)",
+                        label=f"⬇️ Download Results",
                         data=buffer.getvalue(),
-                        file_name=f"PVJ_Extracted_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                        file_name=download_name,
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True
                     )
