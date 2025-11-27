@@ -1,0 +1,8 @@
+pandas
+openpyxl
+tqdm
+pymupdf
+pytesseract
+Pillow
+streamlit
+watchdog

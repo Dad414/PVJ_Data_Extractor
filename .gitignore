@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+input_pdfs/
+output_excels/
+logs/
+debug_pages/
+debug_texts/
+*.pdf
+*.xlsx
+.env
