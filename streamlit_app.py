@@ -157,6 +157,10 @@ elif selected_page == "Extractor":
             for up_file in uploaded_files:
                 with st.spinner(f"Processing {up_file.name}..."):
                     df, summaries = process_file(up_file, cfg)
+                    # Add source filename to dataframe
+                    if not df.empty:
+                        df["Source_File"] = up_file.name
+                        
                     st.session_state.extraction_results[up_file.name] = {
                         "df": df,
                         "summaries": summaries,
@@ -315,11 +319,19 @@ elif selected_page == "Data Explorer":
                 edited_df.to_excel(tmp_xls.name, index=False)
                 tmp_xls_path = tmp_xls.name
             
+            # Determine filename based on Source_File column
+            export_name = "pvj_filtered_data.xlsx"
+            if "Source_File" in edited_df.columns:
+                unique_sources = edited_df["Source_File"].unique()
+                if len(unique_sources) == 1:
+                    base_name = os.path.splitext(unique_sources[0])[0]
+                    export_name = f"{base_name}.xlsx"
+
             with open(tmp_xls_path, "rb") as f:
                 st.download_button(
                     label="⬇️ Download Excel",
                     data=f,
-                    file_name="pvj_filtered_data.xlsx",
+                    file_name=export_name,
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
