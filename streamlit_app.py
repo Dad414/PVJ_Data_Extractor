@@ -162,6 +162,38 @@ elif selected_page == "Extractor":
                         "summaries": summaries,
                         "processed": True
                     }
+            # Combine results
+            final_df = get_combined_dataframe()
+            
+            if not final_df.empty:
+                # 1. Save to Server Output Directory
+                out_dir = defaults.get("output_dir", "")
+                
+                if out_dir:
+                    try:
+                        os.makedirs(out_dir, exist_ok=True)
+                        timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
+                        save_name = f"PVJ_Extracted_{timestamp}.xlsx"
+                        saved_path = os.path.join(out_dir, save_name)
+                        
+                        final_df.to_excel(saved_path, index=False)
+                        st.success(f"✅ Saved results to server: `{saved_path}`")
+                    except Exception as e:
+                        st.error(f"Could not save to server directory: {e}")
+
+                # 2. Provide Download Button
+                with io.BytesIO() as buffer:
+                    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                        final_df.to_excel(writer, index=False, sheet_name='Extracted Data')
+                    
+                    st.download_button(
+                        label="⬇️ Download All Results (Excel)",
+                        data=buffer.getvalue(),
+                        file_name=f"PVJ_Extracted_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
+                    )
+
             st.balloons()
             st.success("Batch processing complete! Head to **Analytics** or **Data Explorer**.")
 
@@ -300,7 +332,7 @@ elif selected_page == "Settings":
     with c2:
         st.markdown("**Recognition Settings**")
         dpi = st.number_input("Scan DPI", 150, 600, st.session_state.custom_config["dpi"], 50)
-        output_dir = st.text_input("Output Directory", st.session_state.custom_config["output_dir"])
+        output_dir = st.text_input("Output Directory", st.session_state.custom_config["output_dir"], help="Path on the server to save results. For local downloads, use the Download button after extraction.")
     
     if st.button("Save Settings"):
         st.session_state.custom_config.update({
