@@ -7,4 +7,3 @@ Pillow
 streamlit
 watchdog
 plotly
-bcrypt
