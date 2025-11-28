@@ -12,6 +12,11 @@ import plotly.graph_objects as go
 import extractor
 import excel_writer
 from config import DEFAULTS, Config
+import auth
+
+# Initialize DB
+auth.init_db()
+
 
 # Page Config
 st.set_page_config(
@@ -20,6 +25,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# --- Authentication Check ---
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    auth.login_page()
+    st.stop()
+
 
 # --- Load Custom CSS ---
 def local_css(file_name):
@@ -84,7 +98,12 @@ def get_combined_dataframe():
 # --- Sidebar Navigation ---
 with st.sidebar:
     st.title("🌿 PVJ Research")
+    st.write(f"User: {st.session_state.get('username', 'Guest')}")
+    if st.button("Logout"):
+        st.session_state.authenticated = False
+        st.rerun()
     st.markdown("---")
+
     selected_page = st.radio(
         "Navigate", 
         ["Home", "Extractor", "Analytics", "Data Explorer", "Settings"],
